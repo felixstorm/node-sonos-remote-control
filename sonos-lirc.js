@@ -1,14 +1,17 @@
 "use strict";
 var net = require("net");
 // The default path to the lircd socket is /var/run/lirc/lircd, change this if you need
-var socket = net.connect({path: "/var/run/lirc/lircd"});
+var socket = net.connect('/var/run/lirc/lircd');
 var SonosDiscovery = require('sonos-discovery');
 var SonosHttpAPI = require('sonos-http-api');
 var discovery = new SonosDiscovery();
 
 var presets = {
-  "all": {"players": [{ "roomName": "Bathroom", "volume": 10 },{ "roomName": "Kitchen", "volume": 10 },{ "roomName": "Office", "volume": 10 },{ "roomName": "Bedroom", "volume": 10 },{ "roomName": "TV Room", "volume": 15 }]}
-  };
+  "all": {"players": [
+    { "roomName": "Wohnzimmer", "volume": 10 },
+    { "roomName": "Bad", "volume": 10 },
+    { "roomName": "Kueche", "volume": 10 }
+  ]}};
 
 // This is only for giving me an optional http api as well, you can skip this if you only want IR remote support.
 var httpAPI = new SonosHttpAPI(discovery, 5005, presets);
@@ -39,16 +42,16 @@ var actions = {
     return false;
   },
   "red": function () {
-    console.log("Switching player to Office");
-    player = discovery.getPlayer("Office");
+    console.log("Switching player to Wohnzimmer");
+    player = discovery.getPlayer("Wohnzimmer");
   },
   "green": function () {
-    console.log("Switching player to Kitchen");
-    player = discovery.getPlayer("Kitchen");
+    console.log("Switching player to Bad");
+    player = discovery.getPlayer("Bad");
   },
   "yellow": function () {
-    console.log("Switching player to TV Room");
-    player = discovery.getPlayer("TV Room");
+    console.log("Switching player to Kueche");
+    player = discovery.getPlayer("Kueche");
   }
 };
 
@@ -65,8 +68,8 @@ var player = null;
 // I mapped my color buttons to change the current player if needed
 discovery.on('topology-change', function () {
   if (player == null) {
-      console.log("selecting player TV Room");
-    player = discovery.getPlayer("TV Room");
+      console.log("selecting player Wohnzimmer");
+    player = discovery.getPlayer("Wohnzimmer");
   }
 });
 
