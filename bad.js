@@ -1,49 +1,22 @@
 "use strict";
-var net = require("net");
 
-var SonosDiscovery = require('sonos-discovery');
-var discovery = new SonosDiscovery();
+var defaultPlayer = "Bad";
 
-var Keyboard = require('./keyboard.js');
-var keyboard = new Keyboard('event3');
-
-// This maps the key code from lircd with an action
 var actions = {
-  "vol_up": function (player) {
-    player.setVolume("+1");
-    return true;
-  },
-  "vol_down": function (player) {
-    player.setVolume("-1");
-    return true;
-  },
-  "<<": function (player) {
-    player.coordinator.previousTrack();
-    return false;
-  },
-  ">>": function (player) {
-    player.coordinator.nextTrack();
-  },
-  "play": function (player) {
-    player.coordinator.play();
-  },
-  "pause": function (player) {
-    player.coordinator.pause();
-    return false;
-  },
-  "red": function () {
-    console.log("Switching player to Wohnzimmer");
-    player = discovery.getPlayer("Wohnzimmer");
-  },
-  "green": function () {
-    console.log("Switching player to Bad");
-    player = discovery.getPlayer("Bad");
-  },
-  "yellow": function () {
-    console.log("Switching player to Kueche");
-    player = discovery.getPlayer("Kueche");
-  }
+  "KEY_VOLUMEUP": function (player) { player.setVolume("+1"); return true; },
+  "KEY_VOLUMEDOWN": function (player) { player.setVolume("-1"); return true; },
+  "165": function (player) { player.coordinator.previousTrack(); },
+  "163": function (player) { player.coordinator.nextTrack(); },
+  "164": function (player) { player.coordinator.play(); },
+  "166": function (player) { player.coordinator.pause(); }
 };
+
+var actionsSwitchPlayer = {
+  "KEY_T": "Wohnzimmer",
+  "KEY_M": "Bad",
+  "KEY_I": "Kueche"
+};
+// player = discovery.getPlayer("Wohnzimmer");
 
 // presets for grouping
 var presets = {
@@ -60,25 +33,36 @@ var buttonToPreset = {
 };
 
 
-var player = null;
+var net = require("net");
 
-// We need an initial player as soon as we have scanned the network
-// I auto select the "TV Room" just to have anything controllable
-// I mapped my color buttons to change the current player if needed
+var SonosDiscovery = require('sonos-discovery');
+var discovery = new SonosDiscovery();
+
+var Keyboard = require('./keyboard.js');
+var keyboardKeys = new Keyboard('event2');
+var keyboardMedia = new Keyboard('event3');
+
+var player = null;
 discovery.on('topology-change', function () {
   if (player == null) {
-      console.log("selecting player Wohnzimmer");
-    player = discovery.getPlayer("Wohnzimmer");
+    player = discovery.getPlayer(defaultPlayer);
   }
 });
 
-var allowRepeat;
+keyboardKeys.on('keypress', processKeyEvent);
+keyboardMedia.on('keypress', processKeyEvent);
 
-keyboard.on('keyup', console.log);
-keyboard.on('keydown', console.log);
-keyboard.on('keypress', console.log);
+function processKeyEvent(event) {
+  console.log(event.keyCode + " " + event.keyId);
+  var action = actions[event.keyId] || actions[event.keyCode];
+  if (player && action) {
+    action(player);
+  }
+}
 
 /*
+var allowRepeat;
+
 socket.on("data", function (data) {
   var cols = data.toString().split(' ');
   var keyCode = cols[2];
