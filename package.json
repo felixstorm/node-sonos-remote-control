@@ -1,0 +1,9 @@
+{
+  "name": "sonos-android-ir",
+  "dependencies": {
+    "sonos-discovery": "git+https://github.com/jishi/node-sonos-discovery.git#master",
+    "ref": "*",
+    "hexy": "*"
+  },
+  "engine": "node 0.8.x"
+}
