@@ -11,6 +11,19 @@ var actions = {
   "166": function (player) { player.coordinator.pause(); }
 };
 
+var actionsFavorites = {
+  "KEY_KP0": "0 ",
+  "KEY_KP1": "1 ",
+  "KEY_KP2": "2 ",
+  "KEY_KP3": "3",
+  "KEY_KP4": "4 ",
+  "KEY_KP5": "5 ",
+  "KEY_KP6": "6 ",
+  "KEY_KP7": "7 ",
+  "KEY_KP8": "8 ",
+  "KEY_KP9": "9 ",
+};
+
 var actionsSwitchPlayer = {
   "KEY_T": "Wohnzimmer",
   "KEY_M": "Bad",
@@ -33,14 +46,8 @@ var buttonToPreset = {
 };
 
 
-var net = require("net");
-
 var SonosDiscovery = require('sonos-discovery');
 var discovery = new SonosDiscovery();
-
-var LinuxKeyboard = require('./linux-keyboard.js');
-var keyboardKeys = new LinuxKeyboard('event2');
-var keyboardMedia = new LinuxKeyboard('event3');
 
 var player = null;
 discovery.on('topology-change', function () {
@@ -49,37 +56,26 @@ discovery.on('topology-change', function () {
   }
 });
 
+
+var LinuxKeyboard = require('./linux-keyboard.js');
+var keyboardKeys = new LinuxKeyboard('event2');
+var keyboardMedia = new LinuxKeyboard('event3');
+
 keyboardKeys.on('keypress', processKeyEvent);
 keyboardMedia.on('keypress', processKeyEvent);
 
 function processKeyEvent(event) {
   console.log(event.keyCode + " " + event.keyId);
+
   var action = actions[event.keyId] || actions[event.keyCode];
   if (player && action) {
     action(player);
   }
-}
 
-/*
-var allowRepeat;
-
-socket.on("data", function (data) {
-  var cols = data.toString().split(' ');
-  var keyCode = cols[2];
-  var repeat = cols[1];
-  console.log(repeat, keyCode);
-  allowRepeat = repeat == "00" ? true : allowRepeat;
-
-  console.log(" before action ", allowRepeat)
-  
-  if (allowRepeat && player && actions[keyCode]) {
-    allowRepeat = actions[keyCode](player);
-  } else if (allowRepeat && presets[buttonToPreset[keyCode]]) {
-    discovery.applyPreset(presets[buttonToPreset[keyCode]]);
-    allowRepeat = false;
+  var actionFavorite = actionsFavorites[line];
+  if (player && actionFavorite) {
+    player.replaceWithFavorite(actionFavorite, function() {
+      player.play();
+    });
   }
-
-  console.log("after action", allowRepeat);
-  
-});
-*/
+}
