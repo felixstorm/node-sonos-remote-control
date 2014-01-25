@@ -38,6 +38,7 @@ var presets = {
     { "roomName": "Bad", "volume": 10 },
     { "roomName": "Kueche", "volume": 10 }
   ]}};
+// discovery.applyPreset(presets[buttonToPreset[keyCode]]);
 
 // this maps keycodes to predefined presets
 var buttonToPreset = {
@@ -48,8 +49,8 @@ var buttonToPreset = {
 
 var SonosDiscovery = require('sonos-discovery');
 var discovery = new SonosDiscovery();
-
 var player = null;
+
 discovery.on('topology-change', function () {
   if (player == null) {
     player = discovery.getPlayer(defaultPlayer);
@@ -67,15 +68,20 @@ keyboardMedia.on('keypress', processKeyEvent);
 function processKeyEvent(event) {
   console.log(event.keyCode + " " + event.keyId);
 
-  var action = actions[event.keyId] || actions[event.keyCode];
-  if (player && action) {
-    action(player);
-  }
-
-  var actionFavorite = actionsFavorites[event.keyId] || actionsFavorites[event.keyCode];
-  if (player && actionFavorite) {
-    player.replaceWithFavorite(actionFavorite, function() {
-      player.play();
-    });
+  if (player)
+  {
+    var action = actions[event.keyId] || actions[event.keyCode];
+    if (action) {
+      action(player);
+      return;
+    }
+    
+    var actionFavorite = actionsFavorites[event.keyId] || actionsFavorites[event.keyCode];
+    if (actionFavorite) {
+      player.replaceWithFavorite(actionFavorite, function() {
+        player.play();
+      });
+      return;
+    }
   }
 }

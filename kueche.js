@@ -1,96 +1,93 @@
 "use strict";
-var net = require("net");
-// The default path to the lircd socket is /var/run/lirc/lircd, change this if you need
-var socket = net.connect('/var/run/lirc/lircd');
-var SonosDiscovery = require('sonos-discovery');
-var SonosHttpAPI = require('sonos-http-api');
-var discovery = new SonosDiscovery();
 
+var defaultPlayer = "Kueche";
+
+var actions = {
+  "vol_up": function (player) { player.setVolume("+1"); return true; },
+  "vol_down": function (player) { player.setVolume("-1"); return true; },
+  "rev": function (player) { player.coordinator.previousTrack(); },
+  "fwd": function (player) { player.coordinator.nextTrack(); },
+  "play": function (player) { player.coordinator.play(); },
+  "stop": function (player) { player.coordinator.pause(); }
+};
+
+var actionsFavorites = {
+  "0": "0 ",
+  "1": "1 ",
+  "2": "2 ",
+  "3": "3",
+  "4": "4 ",
+  "5": "5 ",
+  "6": "6 ",
+  "7": "7 ",
+  "8": "8 ",
+  "9": "9 ",
+};
+
+var actionsSwitchPlayer = {
+  "red": "Wohnzimmer",
+  "green": "Bad",
+  "yellow": "Kueche"
+};
+// player = discovery.getPlayer("Wohnzimmer");
+
+// presets for grouping
 var presets = {
   "all": {"players": [
     { "roomName": "Wohnzimmer", "volume": 10 },
     { "roomName": "Bad", "volume": 10 },
     { "roomName": "Kueche", "volume": 10 }
   ]}};
+// discovery.applyPreset(presets[buttonToPreset[keyCode]]);
 
-// This is only for giving me an optional http api as well, you can skip this if you only want IR remote support.
-var httpAPI = new SonosHttpAPI(discovery, 5005, presets);
-
-
-// This maps the key code from lircd with an action
-var actions = {
-  "vol_up": function (player) {
-    player.setVolume("+1");
-    return true;
-  },
-  "vol_down": function (player) {
-    player.setVolume("-1");
-    return true;
-  },
-  "<<": function (player) {
-    player.coordinator.previousTrack();
-    return false;
-  },
-  ">>": function (player) {
-    player.coordinator.nextTrack();
-  },
-  "play": function (player) {
-    player.coordinator.play();
-  },
-  "pause": function (player) {
-    player.coordinator.pause();
-    return false;
-  },
-  "red": function () {
-    console.log("Switching player to Wohnzimmer");
-    player = discovery.getPlayer("Wohnzimmer");
-  },
-  "green": function () {
-    console.log("Switching player to Bad");
-    player = discovery.getPlayer("Bad");
-  },
-  "yellow": function () {
-    console.log("Switching player to Kueche");
-    player = discovery.getPlayer("Kueche");
-  }
-};
-
-// This maps keycodes to predefined presets (defined earlier in file)
+// this maps keycodes to predefined presets
 var buttonToPreset = {
-  "1": "all",
-  "2": "tv"
+  "1a": "all",
+  "2a": "tv"
 };
 
+
+var SonosDiscovery = require('sonos-discovery');
+var discovery = new SonosDiscovery();
 var player = null;
 
-// We need an initial player as soon as we have scanned the network
-// I auto select the "TV Room" just to have anything controllable
-// I mapped my color buttons to change the current player if needed
 discovery.on('topology-change', function () {
   if (player == null) {
-      console.log("selecting player Wohnzimmer");
-    player = discovery.getPlayer("Wohnzimmer");
+    player = discovery.getPlayer(defaultPlayer);
   }
 });
 
-var allowRepeat;
+
+var allowRepeat = false;
+
+var net = require("net");
+var socket = net.connect('/var/run/lirc/lircd');
 
 socket.on("data", function (data) {
   var cols = data.toString().split(' ');
   var keyCode = cols[2];
   var repeat = cols[1];
-  console.log(repeat, keyCode);
-  allowRepeat = repeat == "00" ? true : allowRepeat;
-
-  console.log(" before action ", allowRepeat)
+  console.log(repeat, keyCode, allowRepeat);
   
-  if (allowRepeat && player && actions[keyCode]) {
-    allowRepeat = actions[keyCode](player);
-  } else if (allowRepeat && presets[buttonToPreset[keyCode]]) {
-    discovery.applyPreset(presets[buttonToPreset[keyCode]]);
-    allowRepeat = false;
+  if (repeat != "00" && !allowRepeat) {
+    return;
   }
-
-  console.log("after action", allowRepeat);
   
+  if (player)
+  {
+    var action = actions[keyCode];
+    if (action) {
+      allowRepeat = action(player);
+      return;
+    }
+    
+    var actionFavorite = actionsFavorites[keycode];
+    if (actionFavorite) {
+      player.replaceWithFavorite(actionFavorite, function() {
+        player.play();
+      });
+      allowRepeat = false;
+      return;
+    }
+  }
 });
