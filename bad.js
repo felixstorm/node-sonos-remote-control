@@ -38,9 +38,9 @@ var net = require("net");
 var SonosDiscovery = require('sonos-discovery');
 var discovery = new SonosDiscovery();
 
-var Keyboard = require('./keyboard.js');
-var keyboardKeys = new Keyboard('event2');
-var keyboardMedia = new Keyboard('event3');
+var LinuxKeyboard = require('./linux-keyboard.js');
+var keyboardKeys = new LinuxKeyboard('event2');
+var keyboardMedia = new LinuxKeyboard('event3');
 
 var player = null;
 discovery.on('topology-change', function () {
