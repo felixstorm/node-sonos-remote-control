@@ -72,7 +72,7 @@ function processKeyEvent(event) {
     action(player);
   }
 
-  var actionFavorite = actionsFavorites[line];
+  var actionFavorite = actionsFavorites[event.keyId] || actionsFavorites[event.keyCode];
   if (player && actionFavorite) {
     player.replaceWithFavorite(actionFavorite, function() {
       player.play();
