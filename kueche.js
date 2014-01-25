@@ -81,10 +81,12 @@ socket.on("data", function (data) {
       return;
     }
     
-    var actionFavorite = actionsFavorites[keycode];
+    var actionFavorite = actionsFavorites[keyCode];
     if (actionFavorite) {
-      player.replaceWithFavorite(actionFavorite, function() {
-        player.play();
+      player.replaceWithFavorite(actionFavorite, function(success) {
+        if (success) {
+          player.play();
+        }
       });
       allowRepeat = false;
       return;

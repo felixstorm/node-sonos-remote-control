@@ -78,8 +78,10 @@ function processKeyEvent(event) {
     
     var actionFavorite = actionsFavorites[event.keyId] || actionsFavorites[event.keyCode];
     if (actionFavorite) {
-      player.replaceWithFavorite(actionFavorite, function() {
-        player.play();
+      player.replaceWithFavorite(actionFavorite, function(success) {
+        if (success) {
+          player.play();
+        }
       });
       return;
     }
