@@ -1,5 +1,5 @@
 {
-  "name": "sonos-android-ir",
+  "name": "node-sonos-remote-control",
   "version": "0.0.1",
   "dependencies": {
     "sonos-discovery": "git+https://github.com/jishi/node-sonos-discovery.git#master",
