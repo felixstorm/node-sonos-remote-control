@@ -1,8 +1,10 @@
 "use strict";
 
 var defaultTargetPlayerName = "Kueche";
+var lircOurRemoteName = "thomson_dvd";
+
 var localAmpPlayerName = "Kueche";
-var localAmpOffTimeoutSecs = 10;
+var localAmpOffTimeoutSecs = 120;
 
 var actions = {
     "vol_up": function (player) { player.setVolume("+1"); return true; },
@@ -41,7 +43,7 @@ var presets = {
         { "roomName": "Bad", "volume": 10 },
         { "roomName": "Kueche", "volume": 10 }
     ]}};
-// discovery.applyPreset(presets[buttonToPreset[keyCode]]);
+// discovery.applyPreset(presets[buttonToPreset[buttonName]]);
 
 // this maps keycodes to predefined presets
 var buttonToPreset = {
@@ -64,27 +66,32 @@ discovery.on('topology-change', function () {
 var allowRepeat = false;
 
 var net = require("net");
-var socket = net.connect('/var/run/lirc/lircd');
+var lircdSocket = net.connect('/var/run/lirc/lircd');
 
-socket.on("data", function (data) {
+lircdSocket.on("data", function (data) {
+
     var cols = data.toString().split(' ');
-    var keyCode = cols[2];
-    var repeat = cols[1];
-    console.log(repeat, keyCode, allowRepeat);
+    var repeatCount = cols[1];
+    var buttonName = cols[2];
+    var remoteName = (cols[3] || '').trim();  // trim newline
+    if (remoteName != lircOurRemoteName)
+        return;
+
+    console.log('lircdSocket.data: ', remoteName, buttonName, repeatCount, allowRepeat);
     
-    if (repeat != "00" && !allowRepeat) {
+    if (repeatCount != "00" && !allowRepeat) {
         return;
     }
     
     if (targetPlayer)
     {
-        var action = actions[keyCode];
+        var action = actions[buttonName];
         if (action) {
             allowRepeat = action(targetPlayer);
             return;
         }
         
-        var actionFavorite = actionsFavorites[keyCode];
+        var actionFavorite = actionsFavorites[buttonName];
         if (actionFavorite) {
             targetPlayer.replaceWithFavorite(actionFavorite, function(success) {
                 if (success) {
@@ -101,10 +108,11 @@ socket.on("data", function (data) {
 var isLocalAmpOn = false;
 var localAmpOffTimeoutId = null;
 discovery.on('transport-state', function (data) { 
+
     if (data.roomName != localAmpPlayerName)
         return;
     
-    //console.log('transport-state: ', data);
+    //console.log('discovery.transport-state: ', data);
     if (data.state.playerState == 'PLAYING')
     {
         if (localAmpOffTimeoutId)
@@ -113,7 +121,12 @@ discovery.on('transport-state', function (data) {
         
         if (!isLocalAmpOn)
         {
-            console.log('Turning Amp On');
+            console.log('*** Turning Amp On');
+            lircdSocket.write('SEND_ONCE jvc_dvd_receiver fm_am\n');
+            setTimeout(function() {
+                lircdSocket.write('SEND_ONCE jvc_dvd_receiver aux\n');
+            }, 100);
+            
             isLocalAmpOn = true;
         }
     }
@@ -122,7 +135,9 @@ discovery.on('transport-state', function (data) {
         if (isLocalAmpOn && !localAmpOffTimeoutId)
         {
             localAmpOffTimeoutId = setTimeout(function() {
-                console.log('Turning Amp Off');
+                console.log('*** Turning Amp Off');
+                lircdSocket.write('SEND_ONCE jvc_dvd_receiver power_audio\n');
+                
                 isLocalAmpOn = false;
             }, localAmpOffTimeoutSecs * 1000);
         }
