@@ -16,7 +16,7 @@ var actionsFavorites = {
     "KEY_KP0": "0 ",
     "KEY_KP1": "1 ",
     "KEY_KP2": "2 ",
-    "KEY_KP3": "3",
+    "KEY_KP3": "3 ",
     "KEY_KP4": "4 ",
     "KEY_KP5": "5 ",
     "KEY_KP6": "6 ",
@@ -79,9 +79,9 @@ function processKeyEvent(event) {
         
         var actionFavorite = actionsFavorites[event.keyId] || actionsFavorites[event.keyCode];
         if (actionFavorite) {
-            targetPlayer.replaceWithFavorite(actionFavorite, function(success) {
+            targetPlayer.coordinator.replaceWithFavorite(actionFavorite, function(success) {
                 if (success) {
-                    targetPlayer.play();
+                    targetPlayer.coordinator.play();
                 }
             });
             return;

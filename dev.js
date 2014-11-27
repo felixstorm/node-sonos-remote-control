@@ -1,7 +1,8 @@
 "use strict";
 
-var defaultTargetPlayerName = "Living Room";
-var localAmpPlayerName = "Living Room";
+var defaultTargetPlayerName = "Arbeitszimmer";
+
+var localAmpPlayerName = "Arbeitszimmer";
 var localAmpOffTimeoutSecs = 10;
 
 
@@ -19,7 +20,7 @@ var actionsFavorites = {
     "KEY_KP0": "0 ",
     "KEY_KP1": "1 ",
     "KEY_KP2": "2 ",
-    "KEY_KP3": "3",
+    "KEY_KP3": "3 ",
     "KEY_KP4": "4 ",
     "KEY_KP5": "5 ",
     "KEY_KP6": "6 ",
@@ -78,9 +79,9 @@ process.stdin.on('data', function(line) {
         
         var actionFavorite = actionsFavorites[line];
         if (actionFavorite) {
-            targetPlayer.replaceWithFavorite(actionFavorite, function(success) {
+            targetPlayer.coordinator.replaceWithFavorite(actionFavorite, function(success) {
                 if (success) {
-                    targetPlayer.play();
+                    targetPlayer.coordinator.play();
                 }
             });
             return;
@@ -92,10 +93,11 @@ process.stdin.on('data', function(line) {
 var isLocalAmpOn = false;
 var localAmpOffTimeoutId = null;
 discovery.on('transport-state', function (data) { 
+
     if (data.roomName != localAmpPlayerName)
         return;
     
-    //console.log('transport-state: ', data);
+    //console.log('discovery.transport-state: ', data);
     if (data.state.playerState == 'PLAYING')
     {
         if (localAmpOffTimeoutId)
@@ -104,7 +106,7 @@ discovery.on('transport-state', function (data) {
         
         if (!isLocalAmpOn)
         {
-            console.log('Turning Amp On');
+            console.log('*** Turning Amp On');
             isLocalAmpOn = true;
         }
     }
@@ -113,7 +115,7 @@ discovery.on('transport-state', function (data) {
         if (isLocalAmpOn && !localAmpOffTimeoutId)
         {
             localAmpOffTimeoutId = setTimeout(function() {
-                console.log('Turning Amp Off');
+                console.log('*** Turning Amp Off');
                 isLocalAmpOn = false;
             }, localAmpOffTimeoutSecs * 1000);
         }

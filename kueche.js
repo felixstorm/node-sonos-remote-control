@@ -20,7 +20,7 @@ var actionsFavorites = {
     "0": "0 ",
     "1": "1 ",
     "2": "2 ",
-    "3": "3",
+    "3": "3 ",
     "4": "4 ",
     "5": "5 ",
     "6": "6 ",
@@ -93,9 +93,9 @@ lircdSocket.on("data", function (data) {
         
         var actionFavorite = actionsFavorites[buttonName];
         if (actionFavorite) {
-            targetPlayer.replaceWithFavorite(actionFavorite, function(success) {
+            targetPlayer.coordinator.replaceWithFavorite(actionFavorite, function(success) {
                 if (success) {
-                    targetPlayer.play();
+                    targetPlayer.coordinator.play();
                 }
             });
             allowRepeat = false;
