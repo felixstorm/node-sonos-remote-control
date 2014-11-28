@@ -4,7 +4,7 @@ var defaultTargetPlayerName = "Wohnzimmer";
 var lircOurRemoteName = "Pioneer_XXD3107_CD_300";
 
 var localAmpPlayerName = "Wohnzimmer";
-var localAmpOffTimeoutSecs = 120;
+var localAmpOffTimeoutSecs = 30;
 
 var actions = {
     "vol_up": function (player) { player.setVolume("+1"); return true; },
